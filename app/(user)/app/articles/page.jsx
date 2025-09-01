@@ -156,7 +156,6 @@ export default function UserArticlesPage() {
           </p>
 
           {/* Controls */}
-          {/* Controls */}
           <form
             onSubmit={(e) => e.preventDefault()}
             className="
