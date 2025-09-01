@@ -1,10 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    appDir: true,
-  },
-  devIndicators: {
-    appIsrStatus: false,
+  async rewrites() {
+    return [
+      {
+        source: "/api/:path*",
+        destination: "https://test-fe.mysellerpintar.com/api/:path*",
+      },
+      {
+        source: "/upload/:path*",
+        destination: "https://test-fe.mysellerpintar.com/upload/:path*",
+      },
+    ];
   },
 };
 
