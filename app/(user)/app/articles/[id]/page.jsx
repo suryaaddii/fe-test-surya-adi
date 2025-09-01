@@ -51,12 +51,10 @@ async function getOthers(categoryId, excludeId) {
 }
 
 export default async function Page({ params }) {
-  const { slug } = params;
-  const id = Number(slug); // pastikan angka
-
+  const { id } = params; // string "12"
   let article = null;
   try {
-    article = await getDetail(id);
+    article = await getDetail(Number(id));
   } catch (e) {
     console.error("Error fetch article:", e);
   }
