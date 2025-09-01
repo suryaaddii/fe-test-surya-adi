@@ -12,10 +12,7 @@ function toAbsolute(u) {
   const origin = base.replace(/\/api\/?$/, "").replace(/\/$/, "");
   return `${origin}${u.startsWith("/") ? "" : "/"}${u}`;
 }
-
-// helper kecil untuk ambil excerpt dari content html
 const stripHtml = (s = "") => s.replace(/<[^>]+>/g, "");
-
 function getThumb(a) {
   const raw =
     a?.thumbnail ??
@@ -38,9 +35,7 @@ const fmtDate = (d) =>
     : "";
 
 /* Data fetchers */
-async function getDetail(slugOrId) {
-  const id = Number(slugOrId); // pastikan integer
-  if (isNaN(id)) throw new Error("Invalid article ID");
+async function getDetail(id) {
   const { data } = await api.get(`/articles/${id}`);
   return data;
 }
@@ -57,11 +52,14 @@ async function getOthers(categoryId, excludeId) {
 
 export default async function Page({ params }) {
   const { slug } = params;
+  const id = Number(slug); // pastikan angka
 
   let article = null;
   try {
-    article = await getDetail(slug);
-  } catch {}
+    article = await getDetail(id);
+  } catch (e) {
+    console.error("Error fetch article:", e);
+  }
 
   if (!article) {
     return (
@@ -97,13 +95,12 @@ export default async function Page({ params }) {
     } catch {}
   }
 
-  const heroSrc =
-    getThumb(article) || pic(`detail-${article.id || slug}`, 1200, 700);
-  const heroFallback = pic(`fb-detail-${article.id || slug}`, 1200, 700);
+  const heroSrc = getThumb(article) || pic(`detail-${article.id}`, 1200, 700);
+  const heroFallback = pic(`fb-detail-${article.id}`, 1200, 700);
 
   return (
     <main className="mx-auto max-w-[980px] px-4 py-8">
-      <div className=" overflow-hidden">
+      <div className="overflow-hidden">
         <div className="px-7 py-8 space-y-6">
           <div className="text-center text-[12px] text-slate-500">
             {createdAt && <span>{createdAt}</span>}
@@ -133,9 +130,8 @@ export default async function Page({ params }) {
         {others.length > 0 && (
           <div className="px-7 pb-8">
             <h2 className="text-[15px] font-semibold mb-4">Other articles</h2>
-
             <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {others.slice(0, 3).map((o) => {
+              {others.map((o) => {
                 const osrc = getThumb(o) || pic(`other-${o.id}`, 720, 480);
                 const ofb = pic(`fb-other-${o.id}`, 720, 480);
                 const dateTxt = fmtDate(o.createdAt);
@@ -146,11 +142,10 @@ export default async function Page({ params }) {
                 return (
                   <li key={o.id}>
                     <Link
-                      href={`/app/articles/${o.id}`}
+                      href={`${ARTICLE_BASE}/${o.id}`}
                       className="group block"
                     >
                       <div className="rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm">
-                        {/* Image */}
                         <div className="aspect-[16/9] bg-slate-100">
                           <SafeImg
                             src={osrc}
@@ -159,40 +154,21 @@ export default async function Page({ params }) {
                             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                           />
                         </div>
-
-                        {/* Texts */}
                         <div className="p-5">
                           {dateTxt && (
                             <p className="text-sm text-slate-500 mb-1">
                               {dateTxt}
                             </p>
                           )}
-
                           <h3 className="text-xl sm:text-[22px] font-semibold text-slate-900 leading-snug group-hover:underline">
                             {o.title}
                           </h3>
-
                           {excerpt && (
                             <p className="mt-2 text-slate-600 text-sm sm:text-base leading-6 line-clamp-3">
                               {excerpt}
                               {rawExcerpt.length > 160 ? "…" : ""}
                             </p>
                           )}
-
-                          {/* Pills */}
-                          <div className="mt-4 flex flex-wrap gap-2">
-                            {[
-                              o?.category?.name || "Technology",
-                              ...(o?.tags?.length ? [o.tags[0]] : ["Design"]),
-                            ].map((t, i) => (
-                              <span
-                                key={i}
-                                className="inline-flex items-center rounded-full bg-blue-100 text-blue-800 px-3 py-1 text-xs font-medium"
-                              >
-                                {t}
-                              </span>
-                            ))}
-                          </div>
                         </div>
                       </div>
                     </Link>
