@@ -38,8 +38,8 @@ const fmtDate = (d) =>
     : "";
 
 /* Data fetchers */
-async function getDetail(slugOrId) {
-  const { data } = await api.get(`/articles/${slugOrId}`);
+async function getDetail(id) {
+  const { data } = await api.get(`/articles/${id}`);
   return data;
 }
 async function getOthers(categoryId, exclude) {
@@ -146,7 +146,7 @@ export default async function Page({ params }) {
                 return (
                   <li key={o.id}>
                     <Link
-                      href={`${ARTICLE_BASE}/${o.id}`}
+                      href={`/app/articles/${o.id}`}
                       className="group block"
                     >
                       <div className="rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm">
