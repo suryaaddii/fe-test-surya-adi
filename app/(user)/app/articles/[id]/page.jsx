@@ -38,18 +38,18 @@ const fmtDate = (d) =>
     : "";
 
 /* Data fetchers */
-async function getDetail(id) {
+async function getDetail(slugOrId) {
+  const id = Number(slugOrId); // pastikan integer
+  if (isNaN(id)) throw new Error("Invalid article ID");
   const { data } = await api.get(`/articles/${id}`);
   return data;
 }
-async function getOthers(categoryId, exclude) {
+async function getOthers(categoryId, excludeId) {
   const { data } = await api.get("/articles", {
     params: {
       category: categoryId,
-      category_id: categoryId,
       limit: 3,
-      per_page: 3,
-      exclude,
+      exclude: excludeId,
     },
   });
   return data?.data || data?.items || [];
@@ -93,7 +93,7 @@ export default async function Page({ params }) {
   let others = [];
   if (categoryId) {
     try {
-      others = await getOthers(categoryId, article.slug ?? slug);
+      others = await getOthers(categoryId, article.id);
     } catch {}
   }
 
