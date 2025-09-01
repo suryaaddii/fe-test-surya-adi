@@ -41,20 +41,17 @@ async function getDetail(id) {
 }
 async function getOthers(categoryId, excludeId) {
   const { data } = await api.get("/articles", {
-    params: {
-      category: categoryId,
-      limit: 3,
-      exclude: excludeId,
-    },
+    params: { category: categoryId, limit: 3, exclude: excludeId },
   });
   return data?.data || data?.items || [];
 }
 
 export default async function Page({ params }) {
-  const { id } = params; // string "12"
+  const { id } = params; // id dari folder [id]
+
   let article = null;
   try {
-    article = await getDetail(Number(id));
+    article = await getDetail(id); // langsung pakai string id
   } catch (e) {
     console.error("Error fetch article:", e);
   }
