@@ -2,7 +2,7 @@ import Link from "next/link";
 import { api } from "@/lib/axios";
 import SafeImg from "@/components/SafeImg";
 
-const ARTICLE_BASE = "/user/articles";
+const ARTICLE_BASE = "/app/articles";
 
 /* Helpers */
 function toAbsolute(u) {
