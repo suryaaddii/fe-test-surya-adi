@@ -231,10 +231,7 @@ export default function UserArticlesPage() {
                   key={a.id}
                   className="rounded-xl bg-white border border-slate-200 overflow-hidden shadow-sm"
                 >
-                  <Link
-                    href={`${ARTICLE_BASE}/${a.slug || a.id}`}
-                    className="block"
-                  >
+                  <Link href={`/app/articles/${o.id}`} className="block">
                     <div className="aspect-[16/9] bg-slate-100">
                       <img
                         src={thumb}
