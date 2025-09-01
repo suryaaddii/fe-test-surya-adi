@@ -8,7 +8,7 @@ import useDebounce from "@/hooks/useDebounce";
 
 /* =================== Config =================== */
 const LIMIT = 9;
-const ARTICLE_BASE = "/app/articles";
+const ARTICLE_BASE = "/app/articles"; // ganti ke "/user/articles" jika struktur rute kamu pakai /user
 
 /* =================== Helpers =================== */
 function toAbsolute(u) {
@@ -70,7 +70,7 @@ export default function UserArticlesPage() {
       page,
       limit: LIMIT,
       title: debouncedSearch || undefined,
-      category: categoryId || undefined,
+      category: categoryId || undefined, // backend-mu pakai "category"
     }),
     [page, debouncedSearch, categoryId]
   );
@@ -110,6 +110,101 @@ export default function UserArticlesPage() {
 
   return (
     <div className="min-h-svh">
+      {/* =================== HERO =================== */}
+      <section
+        className="
+    relative -mt-16
+    w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]
+  "
+      >
+        {/* Background image */}
+        <img
+          src="/bg-user.jpg"
+          alt="Hero background"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        {/* Overlay biru */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#2563EB]/90 to-[#1E40AF]/85" />
+
+        {/* Konten hero */}
+        <div
+          className="
+            relative z-10 mx-auto max-w-[1240px] px-4
+            min-h-[640px] sm:min-h-0
+            text-white
+            flex flex-col justify-center items-center
+            sm:block  /* desktop kembali normal */
+            pt-32 sm:pt-28
+            pb-20 sm:pb-14
+          "
+        >
+          {/* Blog genzet */}
+          <p className="text-[14px] sm:text-base font-bold text-center">
+            Blog genzet
+          </p>
+
+          {/* Heading */}
+          <h1 className="mt-2 text-[36px] sm:text-5xl font-medium leading-snug text-center">
+            The Journal : Design Resources,
+            <br className="hidden sm:block" />
+            Interviews, and Industry News
+          </h1>
+
+          {/* Subheading */}
+          <p className="mt-2 text-[20px] sm:text-2xl text-center leading-normal">
+            Your daily dose of design insights!
+          </p>
+
+          {/* Controls */}
+          {/* Controls */}
+          <form
+            onSubmit={(e) => e.preventDefault()}
+            className="
+            mt-10 sm:mt-6   /* ⬅️ mobile lebih besar jaraknya */
+            flex flex-col sm:flex-row 
+            gap-3 justify-center items-center
+          "
+          >
+            <select
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+              aria-label="Select category"
+              className="h-10 w-full sm:w-56 rounded-md border-0 bg-white text-slate-700 px-3 shadow-md ring-1 ring-white/30 focus:ring-2 focus:ring-white"
+            >
+              <option value="">Select category</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+
+            <div className="relative w-full sm:max-w-md">
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search articles"
+                className="h-10 w-full rounded-md border-0 bg-white pr-10 pl-9 text-slate-700 shadow-md ring-1 ring-white/30 placeholder:text-slate-400 focus:ring-2 focus:ring-white"
+              />
+              <svg
+                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.3-4.3" />
+              </svg>
+            </div>
+          </form>
+        </div>
+
+        {/* garis bawah tipis */}
+        <div className="absolute bottom-0 inset-x-0 h-[1px] bg-white/20" />
+      </section>
+
       {/* =================== LIST =================== */}
       <main className="mx-auto max-w-[1240px] px-4 py-6">
         <p className="text-sm text-slate-600 text-center sm:text-left">
@@ -136,7 +231,10 @@ export default function UserArticlesPage() {
                   key={a.id}
                   className="rounded-xl bg-white border border-slate-200 overflow-hidden shadow-sm"
                 >
-                  <Link href={`${ARTICLE_BASE}/${a.id}`} className="block">
+                  <Link
+                    href={`${ARTICLE_BASE}/${a.slug || a.id}`}
+                    className="block"
+                  >
                     <div className="aspect-[16/9] bg-slate-100">
                       <img
                         src={thumb}
