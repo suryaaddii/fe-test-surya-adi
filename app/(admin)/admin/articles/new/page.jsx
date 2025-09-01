@@ -16,23 +16,24 @@ import {
   AlignRight,
   Undo2,
 } from "lucide-react";
+import Toast from "@/components/Toast";
 
 //  Validasi saat submit
 const schema = z.object({
-  title: z.string().trim().min(5, "Please enter title"),
+  title: z.string().trim().min(2, "Please enter title"),
   categoryId: z.string().min(1, "Please select category"),
-  content: z.string().trim().min(20, "Content field cannot empty"),
+  content: z.string().trim().min(10, "Content field cannot empty"),
 });
 
 export default function AdminArticleCreatePage() {
   const router = useRouter();
   const [cats, setCats] = useState([]);
+  const [toast, setToast] = useState(null);
 
   const {
     register,
     handleSubmit,
     watch,
-    reset,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(schema),
@@ -41,7 +42,7 @@ export default function AdminArticleCreatePage() {
     defaultValues: { title: "", categoryId: "", content: "" },
   });
 
-  // ── Ambil kategori ─────────────────────────────────────────────────
+  // ── Ambil kategori ───────────────────────────
   useEffect(() => {
     api
       .get("/categories", { params: { page: 1, limit: 100 } })
@@ -67,16 +68,19 @@ export default function AdminArticleCreatePage() {
       });
 
       if (response.status === 200 || response.status === 201) {
-        alert("Article created successfully!");
-        // Redirect ke halaman articles
-        router.push("/admin/articles");
+        setToast({ type: "success", message: "Article created successfully!" });
+        setTimeout(() => {
+          router.push("/admin/articles");
+        }, 1500);
       }
     } catch (error) {
       console.error("Error creating article:", error);
-      alert(
-        "Failed to create article: " +
-          (error.response?.data?.message || error.message)
-      );
+      setToast({
+        type: "error",
+        message:
+          "Failed to create article: " +
+          (error.response?.data?.message || error.message),
+      });
     }
   };
 
@@ -93,6 +97,14 @@ export default function AdminArticleCreatePage() {
 
   return (
     <div className="mx-auto w-full max-w-[1240px]">
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
+      )}
+
       <section className="rounded-[12px] border border-slate-200 bg-white shadow-sm min-h-[720px]">
         <div className="px-6 py-4 border-b border-slate-200">
           <h1 className="text-[16px] leading-7 font-medium font-archivo text-slate-900">
@@ -201,24 +213,21 @@ export default function AdminArticleCreatePage() {
             <div className="flex items-center justify-end gap-3">
               <Link
                 href="/admin/articles"
-                className="h-10 px-4 rounded-lg border border-slate-200 bg-white text-slate-900 hover:bg-slate-100
-                           text-sm font-medium flex items-center justify-center cursor-pointer"
+                className="h-10 px-4 rounded-lg border border-slate-200 bg-white text-slate-900 hover:bg-slate-100 text-sm font-medium flex items-center justify-center cursor-pointer"
               >
                 Cancel
               </Link>
               <button
                 type="button"
                 onClick={() => window.alert("Preview not implemented in task")}
-                className="h-10 px-4 rounded-lg bg-slate-200 text-slate-900 hover:bg-slate-100
-                           text-sm font-medium flex items-center justify-center cursor-pointer"
+                className="h-10 px-4 rounded-lg bg-slate-200 text-slate-900 hover:bg-slate-100 text-sm font-medium flex items-center justify-center cursor-pointer"
               >
                 Preview
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="h-10 px-5 rounded-lg bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-60
-                           inline-flex items-center justify-center gap-2 text-sm font-medium cursor-pointer"
+                className="h-10 px-5 rounded-lg bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-60 inline-flex items-center justify-center gap-2 text-sm font-medium cursor-pointer"
               >
                 {isSubmitting ? "Creating Article..." : "Create Article"}
               </button>

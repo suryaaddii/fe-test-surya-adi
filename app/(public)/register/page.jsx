@@ -11,7 +11,7 @@ import { register as registerApi, login, me } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 
 const registerSchema = z.object({
-  username: z.string().min(3, "Username field cannot be empty"),
+  username: z.string().min(1, "Username field cannot be empty"),
   password: z.string().min(8, "Password must be at least 8 characters long"),
   role: z.enum(["User", "Admin"], { required_error: "Select a role" }),
 });
@@ -93,7 +93,12 @@ export default function RegisterPage() {
                 placeholder="Input password"
                 autoComplete="new-password"
                 {...register("password")}
-                className="w-full h-11 rounded-lg border border-slate-200 bg-white pr-10 px-3.5 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-slate-400"
+                className={`w-full h-11 rounded-lg border bg-white pr-10 px-3.5 outline-none 
+        ${
+          errors.password
+            ? "border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500"
+            : "border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        } placeholder:text-slate-400`}
               />
               <button
                 type="button"

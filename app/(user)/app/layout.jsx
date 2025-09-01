@@ -91,6 +91,7 @@ export default function UserLayout({ children }) {
               aria-expanded={acctOpen}
               className="flex items-center gap-3 px-2 cursor-pointer"
             >
+              {/* Avatar bulat biru */}
               <div
                 className={`h-9 w-9 rounded-full grid place-items-center ${avatarBgClass}`}
               >
@@ -100,8 +101,10 @@ export default function UserLayout({ children }) {
                   {(profile?.username?.[0] || "U").toUpperCase()}
                 </span>
               </div>
+
+              {/* Nama user: hanya muncul di desktop */}
               <span
-                className={`font-archivo text-[16px] leading-6 font-medium underline underline-offset-[6px] decoration-[1.5px] ${nameTextClass}`}
+                className={`hidden sm:inline font-archivo text-[16px] leading-6 font-medium ${nameTextClass} underline underline-offset-[6px] decoration-[1.5px]`}
               >
                 {profile?.username ?? "User"}
               </span>
@@ -187,17 +190,17 @@ export default function UserLayout({ children }) {
 
       {/* FOOTER */}
       <footer className="relative bg-[#2563EB] text-white">
-        <div className="mx-auto max-w-[1240px] py-6 flex items-center justify-center">
+        <div className="mx-auto max-w-[1240px] py-6 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-1">
           <Link
             href="/user/articles"
             className="flex items-center gap-2"
             aria-label="Back to articles list"
           >
             <img src={footerLogoSrc} alt="Logo" className={footerLogoClass} />
-            <span className="text-white/90 text-sm sm:text-base leading-none whitespace-nowrap">
-              ©{new Date().getFullYear()} Blog genzet. All rights reserved.
-            </span>
           </Link>
+          <span className="text-white/90 text-sm sm:text-base leading-none text-center">
+            ©{new Date().getFullYear()} Blog genzet. All rights reserved.
+          </span>
         </div>
       </footer>
     </div>

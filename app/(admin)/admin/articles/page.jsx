@@ -8,7 +8,6 @@ import useDebounce from "@/hooks/useDebounce";
 
 const LIMIT = 10;
 
-// Fungsi untuk gambar berdasarkan kategori
 const generateCategoryBasedImage = (
   articleId,
   categoryName,
@@ -31,7 +30,6 @@ const generateCategoryBasedImage = (
     default: "abstract",
   };
 
-  // Normalisasi nama kategori
   const normalizedCategory =
     categoryName?.toLowerCase().replace(/\s+/g, "") || "default";
 
@@ -46,16 +44,13 @@ const generateCategoryBasedImage = (
     categoryThemes.default;
 
   const seed = Math.abs(articleId + (categoryName?.length || 0));
-
   return `https://picsum.photos/seed/${theme}-${seed}/${width}/${height}`;
 };
 
-// Komponen gambar yang dioptimasi
 const ArticleImage = ({ articleId, title, category }) => {
   const [imageError, setImageError] = useState(false);
   const [fallbackIndex, setFallbackIndex] = useState(0);
 
-  // Memoize URL gambar berdasarkan kategori
   const imageUrl = useMemo(() => {
     return generateCategoryBasedImage(articleId, category?.name, 80, 60);
   }, [articleId, category?.name]);
@@ -63,7 +58,6 @@ const ArticleImage = ({ articleId, title, category }) => {
   const fallbackUrls = useMemo(() => {
     const categoryName = category?.name || "default";
     const seed = Math.abs(articleId + (categoryName?.length || 0));
-
     return [
       `https://picsum.photos/seed/fallback-${seed}/80/60`,
       `https://picsum.photos/id/${(seed % 100) + 1}/80/60`,
@@ -79,17 +73,12 @@ const ArticleImage = ({ articleId, title, category }) => {
   }, [articleId, category?.name]);
 
   const handleImageError = useCallback(() => {
-    console.log(
-      `Image error for article ${articleId}, trying fallback ${
-        fallbackIndex + 1
-      }`
-    );
     if (fallbackIndex < fallbackUrls.length - 1) {
       setFallbackIndex((prev) => prev + 1);
     } else {
       setImageError(true);
     }
-  }, [fallbackIndex, fallbackUrls.length, articleId]);
+  }, [fallbackIndex, fallbackUrls.length]);
 
   useEffect(() => {
     setImageError(false);
@@ -110,35 +99,9 @@ const ArticleImage = ({ articleId, title, category }) => {
         className="w-[60px] h-[45px] object-cover rounded-md border border-slate-200"
         loading="lazy"
         onError={handleImageError}
-        style={{
-          display: "block",
-          width: "60px",
-          height: "45px",
-        }}
-        title={`Category: ${category?.name || "Uncategorized"}`}
       />
     </div>
   );
-};
-
-const ImageErrorBoundary = ({ children, fallback }) => {
-  const [hasError, setHasError] = useState(false);
-
-  useEffect(() => {
-    setHasError(false);
-  }, [children]);
-
-  if (hasError) {
-    return (
-      fallback || (
-        <div className="w-[60px] h-[45px] bg-gray-200 rounded-md flex items-center justify-center">
-          <span className="text-xs text-gray-500">IMG</span>
-        </div>
-      )
-    );
-  }
-
-  return children;
 };
 
 export default function AdminArticlesPage() {
@@ -150,7 +113,11 @@ export default function AdminArticlesPage() {
   const [categoryId, setCategoryId] = useState();
   const [loading, setLoading] = useState(true);
 
-  // --- Modal Delete state ---
+  // --- Category State ---
+  const [categories, setCategories] = useState([]);
+  const [openCat, setOpenCat] = useState(false);
+
+  // --- Modal Delete ---
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [selected, setSelected] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
@@ -195,17 +162,26 @@ export default function AdminArticlesPage() {
     }
   }
 
+  async function fetchCategories() {
+    try {
+      const { data } = await api.get("/categories");
+      // adaptif: kalau backend balikin {data: []} atau langsung []
+      const cats = Array.isArray(data?.data) ? data.data : data;
+      setCategories(cats);
+    } catch (err) {
+      console.error("Failed to fetch categories:", err);
+    }
+  }
+
   useEffect(() => {
     fetchData(1);
+    fetchCategories();
   }, []);
   useEffect(() => {
     fetchData(1, debouncedSearch, categoryId);
-  }, [debouncedSearch]);
-  useEffect(() => {
-    fetchData(1, search, categoryId);
-  }, [categoryId]);
+  }, [debouncedSearch, categoryId]);
 
-  // --- Delete flow ---
+  // --- Delete Flow ---
   function askDelete(id) {
     const art = rows.find((r) => r.id === id);
     setSelected({ id, title: art?.title || "" });
@@ -239,25 +215,59 @@ export default function AdminArticlesPage() {
         </div>
 
         <div className="px-5 py-4 border-b border-slate-200 font-archivo">
-          <div className="grid grid-cols-[110px_1fr_auto] items-center gap-3 w-full">
-            <button
-              type="button"
-              className="w-[109px] h-9 px-3 inline-flex items-center justify-between gap-[6px]
-                         rounded-md border border-slate-200 text-sm text-slate-700 bg-white"
-            >
-              <span>Category</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
+          <div className="grid grid-cols-[160px_1fr_auto] items-center gap-3 w-full">
+            {/* Category Dropdown */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setOpenCat(!openCat)}
+                className="w-[150px] h-9 px-3 inline-flex items-center justify-between gap-[6px]
+                           rounded-md border border-slate-200 text-sm text-slate-700 bg-white"
               >
-                <path d="m6 9 6 6 6-6" />
-              </svg>
-            </button>
+                <span>
+                  {categoryId
+                    ? categories.find((c) => c.id === categoryId)?.name
+                    : "Category"}
+                </span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </button>
+              {openCat && (
+                <ul className="absolute mt-1 w-[150px] bg-white border border-slate-200 rounded-md shadow-md z-10">
+                  <li
+                    onClick={() => {
+                      setCategoryId(undefined);
+                      setOpenCat(false);
+                    }}
+                    className="px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 cursor-pointer"
+                  >
+                    All
+                  </li>
+                  {categories.map((cat) => (
+                    <li
+                      key={cat.id}
+                      onClick={() => {
+                        setCategoryId(cat.id);
+                        setOpenCat(false);
+                      }}
+                      className="px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 cursor-pointer"
+                    >
+                      {cat.name}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
 
+            {/* Search */}
             <div className="relative max-w-[240px] w-full">
               <span className="absolute inset-y-0 left-3 flex items-center text-slate-400">
                 <svg
@@ -292,16 +302,9 @@ export default function AdminArticlesPage() {
           </div>
         </div>
 
+        {/* Table */}
         <div className="overflow-x-auto font-archivo text-[14px] leading-[20px]">
           <table className="w-full table-fixed border-collapse">
-            <colgroup>
-              <col className="w-[10%]" />
-              <col className="w-[30%]" />
-              <col className="w-[20%]" />
-              <col className="w-[30%]" />
-              <col className="w-[20%]" />
-            </colgroup>
-
             <thead className="bg-gray-100">
               <tr className="text-slate-900">
                 <th className="px-6 py-3 font-medium text-center">Image</th>
@@ -339,7 +342,6 @@ export default function AdminArticlesPage() {
                     key={a.id}
                     className="align-middle hover:bg-slate-50/60 h-16"
                   >
-                    {/* Image */}
                     <td className="px-6 py-3 text-center">
                       <ArticleImage
                         articleId={a.id}
@@ -347,25 +349,21 @@ export default function AdminArticlesPage() {
                         category={a.category}
                       />
                     </td>
-
                     <td className="px-6 py-3 text-center">
                       <div className="text-slate-800 whitespace-normal break-words line-clamp-2">
                         {a.title}
                       </div>
                     </td>
-
                     <td className="px-6 py-3 text-center text-slate-600">
                       <span className="inline-block max-w-full truncate">
                         {a.category?.name ?? "-"}
                       </span>
                     </td>
-
                     <td className="px-6 py-3 text-center text-slate-600">
                       <span className="whitespace-nowrap">
                         {a.createdAt ? fmt.format(new Date(a.createdAt)) : "-"}
                       </span>
                     </td>
-
                     <td className="px-6 py-3 text-center">
                       <div className="inline-flex items-center justify-end gap-3 text-[14px] leading-5 whitespace-nowrap">
                         <Link
@@ -395,6 +393,7 @@ export default function AdminArticlesPage() {
           </table>
         </div>
 
+        {/* Pagination */}
         <div className="border-t border-slate-200 px-5 py-3">
           {lastPage > 1 && (
             <div className="flex items-center justify-center">
@@ -407,83 +406,6 @@ export default function AdminArticlesPage() {
           )}
         </div>
       </section>
-
-      {confirmOpen && (
-        <div className="fixed inset-0 z-50">
-          <div
-            className="absolute inset-0 bg-slate-900/30"
-            onClick={() => !deletingId && setConfirmOpen(false)}
-          />
-          <div className="absolute inset-0 flex items-center justify-center p-4">
-            <div
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="delete-article-title"
-              aria-describedby="delete-article-desc"
-              className="w-[400px] h-[180px] max-w-full rounded-2xl border border-slate-200 bg-white shadow-xl overflow-hidden"
-            >
-              <div className="p-6 h-full flex flex-col">
-                <h3
-                  id="delete-article-title"
-                  className="font-archivo text-[18px] font-semibold text-slate-900"
-                >
-                  Delete Article
-                </h3>
-                <p
-                  id="delete-article-desc"
-                  className="mt-2 text-[14px] text-slate-500"
-                >
-                  Deleting this article is permanent and cannot undone. All
-                  related content will be removed.
-                </p>
-                <div className="mt-auto flex justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setConfirmOpen(false)}
-                    disabled={!!deletingId}
-                    className="h-10 px-4 text-[14px] rounded-lg border border-slate-200 bg-white text-slate-900 hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={confirmDelete}
-                    disabled={!!deletingId}
-                    className="h-10 px-5 text-[14px] rounded-lg bg-[#E11D48] text-white hover:bg-[#DC1F3A] disabled:opacity-60 cursor-pointer"
-                  >
-                    {deletingId ? "Deleting…" : "Delete"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
-
-const imageUrlCache = new Map();
-
-const generateCategoryBasedImageCached = (
-  articleId,
-  categoryName,
-  width = 80,
-  height = 60
-) => {
-  const cacheKey = `${articleId}-${categoryName}-${width}-${height}`;
-
-  if (imageUrlCache.has(cacheKey)) {
-    return imageUrlCache.get(cacheKey);
-  }
-
-  const url = generateCategoryBasedImage(
-    articleId,
-    categoryName,
-    width,
-    height
-  );
-  imageUrlCache.set(cacheKey, url);
-
-  return url;
-};

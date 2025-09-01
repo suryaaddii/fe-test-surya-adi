@@ -110,16 +110,16 @@ export default function UserArticlesPage() {
 
   return (
     <div className="min-h-svh">
-      {/* =================== HERO full-bleed (tembus navbar & full kiri-kanan) =================== */}
+      {/* =================== HERO =================== */}
       <section
         className="
-          relative -mt-16
-          w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]
-        "
+    relative -mt-16
+    w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]
+  "
       >
         {/* Background image */}
         <img
-          src="/bg-user.jpg" // pastikan file ada di /public/bg-user.jpg
+          src="/bg-user.jpg"
           alt="Hero background"
           className="absolute inset-0 h-full w-full object-cover"
         />
@@ -127,23 +127,43 @@ export default function UserArticlesPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-[#2563EB]/90 to-[#1E40AF]/85" />
 
         {/* Konten hero */}
-        <div className="relative z-10 mx-auto max-w-[1240px] px-4 pb-10 pt-24 sm:pb-14 sm:pt-28 text-white">
-          <p className="text-white text-base font-bold text-center">
+        <div
+          className="
+            relative z-10 mx-auto max-w-[1240px] px-4
+            min-h-[640px] sm:min-h-0
+            text-white
+            flex flex-col justify-center items-center
+            sm:block  /* desktop kembali normal */
+            pt-32 sm:pt-28
+            pb-20 sm:pb-14
+          "
+        >
+          {/* Blog genzet */}
+          <p className="text-[14px] sm:text-base font-bold text-center">
             Blog genzet
           </p>
-          <h1 className="mt-2 text-5xl font-medium leading-tight text-center">
+
+          {/* Heading */}
+          <h1 className="mt-2 text-[36px] sm:text-5xl font-medium leading-snug text-center">
             The Journal : Design Resources,
             <br className="hidden sm:block" />
             Interviews, and Industry News
           </h1>
-          <p className="mt-2 text-white text-2xl text-center">
+
+          {/* Subheading */}
+          <p className="mt-2 text-[20px] sm:text-2xl text-center leading-normal">
             Your daily dose of design insights!
           </p>
 
-          {/* Controls: Select + Search */}
+          {/* Controls */}
+          {/* Controls */}
           <form
             onSubmit={(e) => e.preventDefault()}
-            className="mt-6 flex flex-col sm:flex-row gap-3 justify-center items-center"
+            className="
+              mt-10 sm:mt-6   /* ⬅️ mobile lebih besar jaraknya */
+              flex flex-col sm:flex-row 
+              gap-3 justify-center items-center
+            "
           >
             <select
               value={categoryId}
@@ -177,10 +197,6 @@ export default function UserArticlesPage() {
                 <circle cx="11" cy="11" r="8" />
                 <path d="m21 21-4.3-4.3" />
               </svg>
-              <button
-                type="submit"
-                className="absolute right-1 top-1/2 -translate-y-1/2 rounded-md px-3 py-1.5 text-sm bg-white/80 hover:bg-white text-slate-900"
-              ></button>
             </div>
           </form>
         </div>
@@ -191,16 +207,20 @@ export default function UserArticlesPage() {
 
       {/* =================== LIST =================== */}
       <main className="mx-auto max-w-[1240px] px-4 py-6">
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-slate-600 text-center sm:text-left">
           Showing : <b>{showing}</b> of <b>{total}</b> articles
         </p>
 
         {loading ? (
-          <p className="mt-4 text-sm opacity-70">Loading...</p>
+          <p className="mt-4 text-sm opacity-70 text-center sm:text-left">
+            Loading...
+          </p>
         ) : rows.length === 0 ? (
-          <p className="mt-4 text-sm opacity-70">No articles found.</p>
+          <p className="mt-4 text-sm opacity-70 text-center sm:text-left">
+            No articles found.
+          </p>
         ) : (
-          <section className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <section className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             {rows.map((a) => {
               const thumb = getThumb(a) || pic(`user-${a.id}`, 640, 400);
               const dateTxt = fmtDate(a.createdAt);
@@ -211,7 +231,6 @@ export default function UserArticlesPage() {
                   key={a.id}
                   className="rounded-xl bg-white border border-slate-200 overflow-hidden shadow-sm"
                 >
-                  {/* Link ke detail — path sudah disesuaikan */}
                   <Link
                     href={`${ARTICLE_BASE}/${a.slug || a.id}`}
                     className="block"
@@ -246,9 +265,6 @@ export default function UserArticlesPage() {
                       <div className="mt-3 flex flex-wrap gap-1.5">
                         <span className="inline-block rounded-full bg-slate-100 text-slate-700 text-[11px] px-2 py-0.5">
                           {catName}
-                        </span>
-                        <span className="inline-block rounded-full bg-slate-100 text-slate-700 text-[11px] px-2 py-0.5">
-                          Design
                         </span>
                       </div>
                     </div>

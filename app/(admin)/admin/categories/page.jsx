@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import api from "@/lib/axios";
 import Pagination from "@/components/Pagination";
+import useDebounce from "@/hooks/useDebounce";
 
 export default function CategoriesPage() {
   const [rows, setRows] = useState([]);
@@ -14,7 +15,7 @@ export default function CategoriesPage() {
 
   // ----- Delete modal -----
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [selected, setSelected] = useState(null); // { id, name }
+  const [selected, setSelected] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
 
   // ----- Edit modal -----
@@ -22,7 +23,7 @@ export default function CategoriesPage() {
   const [editData, setEditData] = useState({ id: null, name: "" });
   const [savingId, setSavingId] = useState(null);
   const editInputRef = useRef(null);
-  const [editTried, setEditTried] = useState(false); // << baru
+  const [editTried, setEditTried] = useState(false);
 
   // ----- Add modal -----
   const [addOpen, setAddOpen] = useState(false);
@@ -31,7 +32,10 @@ export default function CategoriesPage() {
   const addInputRef = useRef(null);
   const [addTried, setAddTried] = useState(false);
 
-  // Formatter waktu WIB + detik
+  // ✅ debounce biar gak request tiap ketik
+  const debouncedSearch = useDebounce(search, 400);
+
+  // Formatter waktu WIB
   const fmt = useMemo(
     () =>
       new Intl.DateTimeFormat("id-ID", {
@@ -46,20 +50,27 @@ export default function CategoriesPage() {
     []
   );
 
-  async function fetchData(p = 1, s = search) {
+  async function fetchData(p = 1, s = "") {
     setLoading(true);
     try {
       const { data } = await api.get("/categories", {
-        params: { page: p, limit, search: s || undefined },
+        params: { page: p, limit },
       });
 
-      const items = (Array.isArray(data?.data) ? data.data : [])
-        .slice()
-        .sort((a, b) => {
-          const ta = a?.createdAt ? new Date(a.createdAt).getTime() : 0;
-          const tb = b?.createdAt ? new Date(b.createdAt).getTime() : 0;
-          return tb - ta;
-        });
+      let items = Array.isArray(data?.data) ? data.data : [];
+
+      // ✅ frontend-only filter berdasarkan search
+      if (s) {
+        items = items.filter((item) =>
+          item.name?.toLowerCase().includes(s.toLowerCase())
+        );
+      }
+
+      items = items.slice().sort((a, b) => {
+        const ta = a?.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const tb = b?.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return tb - ta;
+      });
 
       const totalPages =
         data?.totalPages ??
@@ -74,19 +85,23 @@ export default function CategoriesPage() {
     }
   }
 
+  // pertama kali load
   useEffect(() => {
     fetchData(1);
   }, []);
 
+  // trigger ulang kalau debouncedSearch berubah
   useEffect(() => {
-    fetchData(1, search);
-  }, [search]);
+    fetchData(1, debouncedSearch);
+  }, [debouncedSearch]);
 
+  // auto refresh tiap 30 detik
   useEffect(() => {
-    const t = setInterval(() => fetchData(page, search), 30000);
+    const t = setInterval(() => fetchData(page, debouncedSearch), 30000);
     return () => clearInterval(t);
-  }, [page, search]);
+  }, [page, debouncedSearch]);
 
+  // esc close modal
   useEffect(() => {
     if (!confirmOpen && !editOpen && !addOpen) return;
     const onKey = (e) => {
@@ -100,7 +115,7 @@ export default function CategoriesPage() {
     return () => window.removeEventListener("keydown", onKey);
   }, [confirmOpen, editOpen, addOpen, deletingId, savingId, savingNew]);
 
-  // Autofocus edit modal
+  // autofocus edit
   useEffect(() => {
     if (editOpen) {
       const t = setTimeout(() => editInputRef.current?.focus(), 50);
@@ -108,7 +123,7 @@ export default function CategoriesPage() {
     }
   }, [editOpen]);
 
-  // Autofocus add modal
+  // autofocus add
   useEffect(() => {
     if (addOpen) {
       const t = setTimeout(() => addInputRef.current?.focus(), 50);
@@ -129,7 +144,7 @@ export default function CategoriesPage() {
       setDeletingId(selected.id);
       await api.delete(`/categories/${selected.id}`);
       const nextPage = rows.length === 1 && page > 1 ? page - 1 : page;
-      await fetchData(nextPage, search);
+      await fetchData(nextPage, debouncedSearch);
       setConfirmOpen(false);
       setSelected(null);
     } catch (err) {
@@ -143,13 +158,13 @@ export default function CategoriesPage() {
   // ----- Edit handlers -----
   function openEdit(cat) {
     setEditData({ id: cat.id, name: cat.name || "" });
-    setEditTried(false); // reset flag
+    setEditTried(false);
     setEditOpen(true);
   }
 
   async function saveEdit(e) {
     e?.preventDefault?.();
-    setEditTried(true); //
+    setEditTried(true);
     const n = (editData.name || "").trim();
     if (!n) {
       editInputRef.current?.reportValidity?.();
@@ -159,7 +174,7 @@ export default function CategoriesPage() {
     try {
       setSavingId(editData.id);
       await api.put(`/categories/${editData.id}`, { name: n });
-      await fetchData(page, search);
+      await fetchData(page, debouncedSearch);
       setEditOpen(false);
     } catch (err) {
       console.error(err);
@@ -169,6 +184,7 @@ export default function CategoriesPage() {
     }
   }
 
+  // ----- Add handlers -----
   function openAdd() {
     setNewName("");
     setAddTried(false);
@@ -187,7 +203,7 @@ export default function CategoriesPage() {
     try {
       setSavingNew(true);
       await api.post("/categories", { name: n });
-      await fetchData(1, search);
+      await fetchData(1, debouncedSearch);
       setAddOpen(false);
     } catch (err) {
       console.error(err);
@@ -201,7 +217,7 @@ export default function CategoriesPage() {
     <div className="mx-auto w-full max-w-[1240px]">
       {/* Card utama */}
       <section className="rounded-[12px] border border-slate-200 bg-white shadow-sm">
-        {/* Header Total Categories */}
+        {/* Header */}
         <div className="px-5 py-4 border-b border-slate-200">
           <p className="font-archivo text-[16px] leading-5 font-medium">
             Total Categories :{" "}
@@ -209,6 +225,7 @@ export default function CategoriesPage() {
           </p>
         </div>
 
+        {/* Search + Add */}
         <div className="px-5 py-4 border-b border-slate-200 font-archivo">
           <div className="grid grid-cols-[1fr_auto] items-center gap-3 w-full">
             <div className="relative max-w-[240px] w-full">
@@ -244,6 +261,7 @@ export default function CategoriesPage() {
           </div>
         </div>
 
+        {/* Table */}
         <div className="overflow-x-auto font-archivo text-[14px] leading-[20px]">
           <table className="w-full border-collapse table-fixed">
             <colgroup>
@@ -315,19 +333,21 @@ export default function CategoriesPage() {
           </table>
         </div>
 
+        {/* Pagination */}
         <div className="border-t border-slate-200 px-5 py-3">
           {Number.isFinite(lastPage) && lastPage > 1 && (
             <div className="flex items-center justify-center">
               <Pagination
                 page={page}
                 lastPage={lastPage}
-                onPage={(p) => fetchData(p)}
+                onPage={(p) => fetchData(p, debouncedSearch)}
               />
             </div>
           )}
         </div>
       </section>
 
+      {/* ===== Modal Delete ===== */}
       {confirmOpen && (
         <div className="fixed inset-0 z-50">
           <div
@@ -379,6 +399,7 @@ export default function CategoriesPage() {
         </div>
       )}
 
+      {/* ===== Modal Edit ===== */}
       {editOpen && (
         <div className="fixed inset-0 z-50">
           <div
@@ -418,7 +439,6 @@ export default function CategoriesPage() {
                     required
                     minLength={1}
                     onInvalid={(e) => {
-                      // tampilkan tooltip native + aktifkan pesan bawah setelah submit
                       e.currentTarget.setCustomValidity("Category is required");
                       setEditTried(true);
                     }}
@@ -445,7 +465,7 @@ export default function CategoriesPage() {
                   </button>
                   <button
                     type="submit"
-                    disabled={!!savingId} // tidak disable saat kosong → biar tooltip required muncul
+                    disabled={!!savingId}
                     className="h-10 px-5 text-[14px] rounded-lg bg-[#2563EB] text-white hover:opacity-95 disabled:opacity-60 font-archivo cursor-pointer"
                   >
                     {savingId ? "Saving…" : "Save Changes"}
@@ -457,6 +477,7 @@ export default function CategoriesPage() {
         </div>
       )}
 
+      {/* ===== Modal Add ===== */}
       {addOpen && (
         <div className="fixed inset-0 z-50">
           <div
@@ -520,7 +541,7 @@ export default function CategoriesPage() {
                   </button>
                   <button
                     type="submit"
-                    disabled={!!savingNew} // tidak disable saat kosong → biar tooltip required muncul
+                    disabled={!!savingNew}
                     className="h-10 px-5 text-[14px] rounded-lg bg-blue-600 text-white hover:opacity-95 disabled:opacity-60 font-archivo cursor-pointer"
                   >
                     {savingNew ? "Adding…" : "Add"}

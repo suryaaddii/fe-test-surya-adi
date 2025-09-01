@@ -73,7 +73,7 @@ export default async function Page({ params }) {
           </p>
           <div className="mt-6">
             <Link
-              href={ARTICLE_BASE}
+              href={"ARTICLE_BASE"}
               className="inline-flex rounded-md border border-slate-200 bg-white px-4 py-2 hover:bg-slate-50"
             >
               Back to list
