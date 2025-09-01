@@ -160,10 +160,10 @@ export default function UserArticlesPage() {
           <form
             onSubmit={(e) => e.preventDefault()}
             className="
-    mt-10 sm:mt-6   /* ⬅️ mobile lebih besar jaraknya */
-    flex flex-col sm:flex-row 
-    gap-3 justify-center items-center
-  "
+            mt-10 sm:mt-6   /* ⬅️ mobile lebih besar jaraknya */
+            flex flex-col sm:flex-row 
+            gap-3 justify-center items-center
+          "
           >
             <select
               value={categoryId}
