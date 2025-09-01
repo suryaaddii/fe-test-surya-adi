@@ -156,7 +156,6 @@ export default function UserArticlesPage() {
           </p>
 
           {/* Controls */}
-          {/* Controls */}
           <form
             onSubmit={(e) => e.preventDefault()}
             className="
@@ -231,7 +230,7 @@ export default function UserArticlesPage() {
                   key={a.id}
                   className="rounded-xl bg-white border border-slate-200 overflow-hidden shadow-sm"
                 >
-                  <Link href={`/app/articles/${o.id}`} className="block">
+                  <Link href={`/app/articles/${a.id}`} className="block">
                     <div className="aspect-[16/9] bg-slate-100">
                       <img
                         src={thumb}

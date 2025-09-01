@@ -146,7 +146,7 @@ export default async function Page({ params }) {
                 return (
                   <li key={o.id}>
                     <Link
-                      href={`/app/articles/${a.id}`}
+                      href={`/app/articles/${o.id}`}
                       className="group block"
                     >
                       <div className="rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm">
